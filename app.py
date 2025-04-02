@@ -80,22 +80,22 @@ st.markdown("""
     /* Responsive CSS for mobile (screens 768px and below) */
     @media only screen and (max-width: 768px) {
         h1 {
-            font-size: 1.8rem;
+            font-size: 1.8rem !important;
         }
         h2, h3 {
-            font-size: 1.4rem;
+            font-size: 1.4rem !important;
         }
         .stButton>button {
-            width: 100%;
-            font-size: 1rem;
-            padding: 8px 10px;
+            width: 100% !important;
+            font-size: 1rem !important;
+            padding: 8px 10px !important;
         }
         .stTextInput, .stNumberInput, .stSelectbox {
             width: 100% !important;
         }
         .card {
-            margin: 10px 0;
-            padding: 15px;
+            margin: 10px 0 !important;
+            padding: 15px !important;
         }
     }
     </style>
@@ -565,6 +565,7 @@ else:
                                     mileage_df.to_csv(MILEAGE_FILE, index=False)
                                     st.success(f"Deleted vehicle {vehicle_name}")
                                     st.rerun()
+                        st.markdown('</div>', unsafe_allow_html=True)
             
             with manage_tabs[1]:
                 st.write("### Manage Employees")
@@ -617,8 +618,10 @@ else:
                 
                 for idx, row in employees_df.iterrows():
                     with st.expander(f"Manage {row['Employee']}"):
-                        col1, col2 = st.columns([2,1])
+                        col1, col2, col3 = st.columns([2, 1, 1])
                         with col1:
+                            st.write(f"{row['Employee']} ({row['Username']}) - {row['Assigned_Vehicle'] if row['Assigned_Vehicle'] else 'No Vehicle'}")
+                        with col2:
                             with st.form(key=f"edit_employee_{idx}"):
                                 edit_name = st.text_input("Employee Name", value=row["Employee"], key=f"edit_name_{idx}")
                                 edit_user = st.text_input("Username", value=row["Username"], key=f"edit_user_{idx}")
@@ -629,7 +632,7 @@ else:
                                 current_vehicle = row["Assigned_Vehicle"]
                                 start_index = vehicle_opts.index(current_vehicle) if current_vehicle in vehicle_opts else 0
                                 edit_vehicle = st.selectbox("Assigned Vehicle", vehicle_opts, index=start_index, key=f"edit_vehicle_{idx}")
-                                if st.form_submit_button("Edit Employee", type="secondary"):
+                                if st.form_submit_button("Edit", type="secondary"):
                                     if edit_name and edit_user and edit_pass:
                                         if edit_user == row["Username"] or edit_user not in employees_df["Username"].values:
                                             if edit_vehicle in av_vehicles:
@@ -669,9 +672,9 @@ else:
                                             st.error("Username already exists.")
                                     else:
                                         st.error("All fields are required.")
-                        with col2:
-                            if st.button("Delete Employee", key=f"delete_emp_{idx}", type="secondary"):
-                                if st.checkbox("Confirm Deletion", key=f"confirm_emp_{idx}"):
+                        with col3:
+                            if st.button("Delete", type="secondary", key=f"delete_employee_{idx}"):
+                                if st.checkbox("Confirm deletion", key=f"confirm_delete_employee_{idx}"):
                                     emp_name = row["Employee"]
                                     employees_df = employees_df.drop(idx)
                                     employees_df.to_csv(EMPLOYEES_FILE, index=False)
@@ -683,3 +686,6 @@ else:
                                     mileage_df.to_csv(MILEAGE_FILE, index=False)
                                     st.success(f"Deleted {emp_name}")
                                     st.rerun()
+                        st.markdown('</div>', unsafe_allow_html=True)
+""", unsafe_allow_html=True)
+
