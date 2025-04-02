@@ -914,4 +914,5 @@ else:
                                     st.success(f"Deleted {emp_name}")
                                     st.rerun()
                         st.markdown('</div>', unsafe_allow_html=True)
-""", unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
