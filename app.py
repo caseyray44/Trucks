@@ -76,6 +76,57 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         margin-bottom: 20px;
     }
+    /* Mobile-specific styles */
+    @media only screen and (max-width: 600px) {
+        /* Center the title and subheader */
+        h1, h2 {
+            text-align: center;
+        }
+        /* Adjust the form container to be more mobile-friendly */
+        .stForm {
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 10px 0;
+        }
+        /* Make selectbox and text inputs full-width with better spacing */
+        .stSelectbox, .stTextInput {
+            margin-bottom: 15px;
+        }
+        .stSelectbox>div>div, .stTextInput>div>input {
+            width: 100% !important;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #bdc3c7;
+            box-sizing: border-box;
+        }
+        /* Style the login button for mobile */
+        .stButton>button[label="Login"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .stButton>button[label="Login"]:hover {
+            background-color: #219653;
+        }
+        /* Add spacing around the form */
+        .stForm>div {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        /* Ensure the app container has padding on mobile */
+        .stApp {
+            padding: 10px;
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
 
