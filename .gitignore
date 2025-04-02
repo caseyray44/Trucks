@@ -1,2 +1,7 @@
-data/
-uploads/
+# Ignore user-uploaded photos
+uploads/oil_photos/
+uploads/photos/
+
+# Ignore user-generated submissions and mileage logs
+data/submissions.csv
+data/mileage_log.csv
