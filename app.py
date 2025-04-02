@@ -56,19 +56,9 @@ st.markdown("""
     .stButton>button[label*="Delete"]:hover {
         background-color: #c0392b;
     }
-    /* Ensure selectbox and text inputs are readable on all devices */
-    .stSelectbox>div>div, .stTextInput>div>input {
-        background-color: #ffffff !important;
-        color: #2c3e50 !important;
+    .stSelectbox>div>div {
         border-radius: 8px;
         border: 1px solid #bdc3c7;
-        padding: 10px;
-        font-size: 16px;
-    }
-    /* Fix placeholder text color */
-    .stTextInput>div>input::placeholder {
-        color: #7f8c8d !important;
-        opacity: 1;
     }
     .stExpander {
         border: 1px solid #ecf0f1;
@@ -86,57 +76,43 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         margin-bottom: 20px;
     }
-    /* Mobile-specific styles */
-    @media only screen and (max-width: 600px) {
-        /* Center the title and subheader */
-        h1, h2 {
-            text-align: center;
+
+    /* -----------------------------------------------
+       NEW: Darker background on mobile (<=768px)
+       ----------------------------------------------- */
+    @media only screen and (max-width: 768px) {
+        /* Dark background for body/app area */
+        body, .stApp {
+            background-color: #222 !important;
+            color: #fff !important;
         }
-        /* Adjust the form container to be more mobile-friendly */
-        .stForm {
-            padding: 15px;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin: 10px 0;
+        /* Make headings white */
+        h1, h2, h3, label, .stMarkdown, .stText, .stRadio, .stCheckbox, .stDateInput, .stFileUploader {
+            color: #fff !important;
         }
-        /* Make selectbox and text inputs full-width with better spacing */
-        .stSelectbox, .stTextInput {
-            margin-bottom: 15px;
+        /* White cards with black text so they stand out on dark background */
+        .card {
+            background-color: #fff !important;
+            color: #000 !important;
+            margin: 10px 0 !important;
+            padding: 15px !important;
         }
-        .stSelectbox>div>div, .stTextInput>div>input {
+        /* Full-width buttons with white text on dark background */
+        .stButton>button {
             width: 100% !important;
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid #bdc3c7;
-            box-sizing: border-box;
-            background-color: #ffffff !important;
-            color: #2c3e50 !important;
+            font-size: 1rem !important;
+            padding: 8px 10px !important;
+            background-color: #333 !important;
+            color: #fff !important;
         }
-        /* Style the login button for mobile */
-        .stButton>button[label="Login"] {
-            width: 100%;
-            padding: 15px;
-            font-size: 18px;
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            margin-top: 10px;
+        .stButton>button:hover {
+            background-color: #444 !important;
         }
-        .stButton>button[label="Login"]:hover {
-            background-color: #219653;
-        }
-        /* Add spacing around the form */
-        .stForm>div {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        /* Ensure the app container has padding on mobile */
-        .stApp {
-            padding: 10px;
+        /* White input fields with black text */
+        .stTextInput, .stNumberInput, .stSelectbox, .stTextArea, .stDateInput, .stFileUploader {
+            width: 100% !important;
+            background-color: #fff !important;
+            color: #000 !important;
         }
     }
     </style>
@@ -411,7 +387,6 @@ else:
                 st.markdown('<div class="card">', unsafe_allow_html=True)
                 st.write("### Mileage History (1 Year)")
                 mileage_df = load_data(MILEAGE_FILE)
-                # convert to datetime so we can chart
                 mileage_df["Date"] = pd.to_datetime(mileage_df["Date"])
                 vehicle_mileage = mileage_df[mileage_df["Vehicle"] == selected_vehicle].copy()
                 if not vehicle_mileage.empty:
@@ -853,7 +828,7 @@ else:
                                     start_index = vehicle_opts.index(current_vehicle)
                                 else:
                                     start_index = 0
-                                edit_vehicle = st.selectbox("Assigned Vehicle", vehicle_opts, index=start_index)
+                                edit_vehicle = st.selectbox("Assigned Vehicle", vehicle_opts, index=start_index, key=f"edit_vehicle_{idx}")
 
                                 if st.form_submit_button("Edit Employee", type="secondary"):
                                     if edit_name and edit_user and edit_pass:
