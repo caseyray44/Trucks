@@ -86,6 +86,13 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         margin-bottom: 20px;
     }
+    /* Ensure form labels are visible on all devices */
+    div[data-testid="stForm"] label {
+        color: #2c3e50 !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        margin-bottom: 5px !important;
+    }
     /* Mobile-specific styles */
     @media only screen and (max-width: 600px) {
         /* Force light theme on mobile */
@@ -99,15 +106,15 @@ st.markdown("""
         }
         /* Adjust the form container to be more mobile-friendly */
         div[data-testid="stForm"] {
-            padding: 15px !important;
+            padding: 20px !important;
             background-color: #ffffff !important;
             border-radius: 10px !important;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
-            margin: 10px 0 !important;
+            margin: 15px 0 !important;
         }
         /* Make selectbox and text inputs full-width with better spacing */
         div[data-testid="stSelectbox"], div[data-testid="stTextInput"] {
-            margin-bottom: 15px !important;
+            margin-bottom: 20px !important;
         }
         div[data-testid="stSelectbox"]>div>div, div[data-testid="stTextInput"]>div>input {
             width: 100% !important;
@@ -145,7 +152,7 @@ st.markdown("""
         div[data-testid="stForm"]>div {
             display: flex !important;
             flex-direction: column !important;
-            gap: 15px !important;
+            gap: 20px !important;
         }
         /* Ensure the app container has padding on mobile */
         .stApp {
