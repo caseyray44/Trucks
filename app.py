@@ -56,9 +56,19 @@ st.markdown("""
     .stButton>button[label*="Delete"]:hover {
         background-color: #c0392b;
     }
-    .stSelectbox>div>div {
+    /* Ensure selectbox and text inputs are readable on all devices */
+    .stSelectbox>div>div, .stTextInput>div>input {
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
         border-radius: 8px;
         border: 1px solid #bdc3c7;
+        padding: 10px;
+        font-size: 16px;
+    }
+    /* Fix placeholder text color */
+    .stTextInput>div>input::placeholder {
+        color: #7f8c8d !important;
+        opacity: 1;
     }
     .stExpander {
         border: 1px solid #ecf0f1;
@@ -76,28 +86,57 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         margin-bottom: 20px;
     }
-
-    /* ------------------------------------------------
-       New Responsive Block for Screens <= 768px
-       ------------------------------------------------ */
-    @media only screen and (max-width: 768px) {
-        h1 {
-            font-size: 1.8rem !important;
+    /* Mobile-specific styles */
+    @media only screen and (max-width: 600px) {
+        /* Center the title and subheader */
+        h1, h2 {
+            text-align: center;
         }
-        h2, h3 {
-            font-size: 1.4rem !important;
+        /* Adjust the form container to be more mobile-friendly */
+        .stForm {
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 10px 0;
         }
-        .stButton>button {
+        /* Make selectbox and text inputs full-width with better spacing */
+        .stSelectbox, .stTextInput {
+            margin-bottom: 15px;
+        }
+        .stSelectbox>div>div, .stTextInput>div>input {
             width: 100% !important;
-            font-size: 1rem !important;
-            padding: 8px 10px !important;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #bdc3c7;
+            box-sizing: border-box;
+            background-color: #ffffff !important;
+            color: #2c3e50 !important;
         }
-        .stTextInput, .stNumberInput, .stSelectbox {
-            width: 100% !important;
+        /* Style the login button for mobile */
+        .stButton>button[label="Login"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin-top: 10px;
         }
-        .card {
-            margin: 10px 0 !important;
-            padding: 15px !important;
+        .stButton>button[label="Login"]:hover {
+            background-color: #219653;
+        }
+        /* Add spacing around the form */
+        .stForm>div {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        /* Ensure the app container has padding on mobile */
+        .stApp {
+            padding: 10px;
         }
     }
     </style>
@@ -133,7 +172,7 @@ if not os.path.exists(DATA_FILE):
 if not os.path.exists(MILEAGE_FILE):
     pd.DataFrame(columns=[
         "submission_id",  # NEW unique ID column
-        "Employee", "Vehicle", "Date",
+        "Employee", "Vehicle", "Date", 
         "Mileage", "Mileage_Comments"
     ]).to_csv(MILEAGE_FILE, index=False)
 
@@ -814,7 +853,7 @@ else:
                                     start_index = vehicle_opts.index(current_vehicle)
                                 else:
                                     start_index = 0
-                                edit_vehicle = st.selectbox("Assigned Vehicle", vehicle_opts, index=start_index, key=f"edit_vehicle_{idx}")
+                                edit_vehicle = st.selectbox("Assigned Vehicle", vehicle_opts, index=start_index)
 
                                 if st.form_submit_button("Edit Employee", type="secondary"):
                                     if edit_name and edit_user and edit_pass:
