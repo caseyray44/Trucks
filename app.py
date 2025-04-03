@@ -94,6 +94,13 @@ st.markdown("""
         font-weight: 600 !important;
         margin-bottom: 5px !important;
     }
+    /* Force label color for selectboxes outside stForm */
+    div[data-testid="stSelectbox"] label {
+        color: #2c3e50 !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        margin-bottom: 5px !important;
+    }
     /* Mobile-specific styles */
     @media only screen and (max-width: 600px) {
         /* Force light theme on mobile */
@@ -160,6 +167,10 @@ st.markdown("""
             padding: 10px !important;
         }
     }
+    /* Force all text in the app to use a visible dark color */
+    .stApp, .stApp * {
+        color: #2c3e50 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -169,7 +180,7 @@ MILEAGE_FILE = "data/mileage_log.csv"
 VEHICLES_FILE = "data/vehicles.csv"
 EMPLOYEES_FILE = "data/employees.csv"
 
-# Remove caching so file updates are always reflected
+# Use direct file reads so changes are immediately visible
 def load_data(file_path):
     return pd.read_csv(file_path)
 
@@ -177,7 +188,7 @@ def load_data(file_path):
 os.makedirs("data", exist_ok=True)
 if not os.path.exists(DATA_FILE):
     pd.DataFrame(columns=[
-        "submission_id",  # Unique ID column
+        "submission_id",
         "Employee", "Vehicle", "Date",
         "Tire_FL_PSI", "Tire_FR_PSI", "Tire_RL_PSI", "Tire_RR_PSI", "Tire_Comments",
         "Headlights_OK", "Taillights_OK", "Brake_Lights_OK", "Turn_Signals_OK", "Lights_Comments",
@@ -192,7 +203,7 @@ if not os.path.exists(DATA_FILE):
 
 if not os.path.exists(MILEAGE_FILE):
     pd.DataFrame(columns=[
-        "submission_id",  # Unique ID column for mileage
+        "submission_id",
         "Employee", "Vehicle", "Date", 
         "Mileage", "Mileage_Comments"
     ]).to_csv(MILEAGE_FILE, index=False)
@@ -542,10 +553,18 @@ else:
             if not df.empty:
                 df["Date"] = pd.to_datetime(df["Date"])
                 df["Week Start"] = df["Date"].dt.to_period("W").apply(lambda r: r.start_time)
+                # Compute current week start date
+                current_week_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=datetime.now().weekday())
                 weeks = sorted(df["Week Start"].unique(), reverse=True)
+                default_index = 0
+                for i, w in enumerate(weeks):
+                    if w.date() == current_week_start.date():
+                        default_index = i
+                        break
                 selected_week = st.selectbox(
                     "Select Week",
                     weeks,
+                    index=default_index,
                     format_func=lambda x: x.strftime("%Y/%m/%d")
                 )
                 week_start = pd.to_datetime(selected_week)
