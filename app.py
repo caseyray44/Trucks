@@ -169,7 +169,7 @@ MILEAGE_FILE = "data/mileage_log.csv"
 VEHICLES_FILE = "data/vehicles.csv"
 EMPLOYEES_FILE = "data/employees.csv"
 
-@st.cache_data
+# Remove caching so file updates are always reflected
 def load_data(file_path):
     return pd.read_csv(file_path)
 
@@ -422,14 +422,14 @@ else:
         # -------------------------------
         with tabs[0]:
             st.subheader("Truck Overview")
-            vehicles_df = load_data(VEHICLES_FILE)
+            vehicles_df = pd.read_csv(VEHICLES_FILE)
             selected_vehicle = st.selectbox("Select Vehicle", vehicles_df["Vehicle"])
             
             # Mileage History
             with st.container(key="milage_container"):
                 st.markdown('<div class="card">', unsafe_allow_html=True)
                 st.write("### Mileage History (1 Year)")
-                mileage_df = load_data(MILEAGE_FILE)
+                mileage_df = pd.read_csv(MILEAGE_FILE)
                 mileage_df["Date"] = pd.to_datetime(mileage_df["Date"])
                 vehicle_mileage = mileage_df[mileage_df["Vehicle"] == selected_vehicle].copy()
                 if not vehicle_mileage.empty:
@@ -440,7 +440,7 @@ else:
                 st.markdown('</div>', unsafe_allow_html=True)
             
             # Consolidate vehicle submissions once
-            df = load_data(DATA_FILE)
+            df = pd.read_csv(DATA_FILE)
             df["Date"] = pd.to_datetime(df["Date"])
             vehicle_submissions = df[df["Vehicle"] == selected_vehicle].copy()
             if not vehicle_submissions.empty:
@@ -518,8 +518,8 @@ else:
                             st.write(row["Notes"])
                             
                             if st.button("Delete this submission", key=f"delete_recent_sub_{row['submission_id']}"):
-                                df = load_data(DATA_FILE)
-                                mileage_df = load_data(MILEAGE_FILE)
+                                df = pd.read_csv(DATA_FILE)
+                                mileage_df = pd.read_csv(MILEAGE_FILE)
                                 
                                 df = df[df["submission_id"] != row["submission_id"]]
                                 df.to_csv(DATA_FILE, index=False)
@@ -536,8 +536,8 @@ else:
         # -------------------------------
         with tabs[1]:
             st.subheader("Employee Check-Ins")
-            df = load_data(DATA_FILE)
-            employees_df = load_data(EMPLOYEES_FILE)
+            df = pd.read_csv(DATA_FILE)
+            employees_df = pd.read_csv(EMPLOYEES_FILE)
 
             if not df.empty:
                 df["Date"] = pd.to_datetime(df["Date"])
@@ -607,7 +607,7 @@ else:
                             st.write(f"Interior Cleaned: {row['Interior_Cleaned']}")
                             st.write(f"Comments: {row['Cleaning_Comments']}")
                             st.write("**Mileage**")
-                            st.write(f"Mileage: {row['Mileage']}") 
+                            st.write(f"Mileage: {row['Mileage']}")
                             st.write(f"Comments: {row['Mileage_Comments']}")
                             st.write("**Wipers**")
                             st.write(f"Wipers OK: {row['Wipers_OK']}")
@@ -642,8 +642,8 @@ else:
                             st.write(row["Notes"])
                             
                             if st.button("Delete this submission", key=f"delete_emp_sub_{row['submission_id']}"):
-                                df = load_data(DATA_FILE)
-                                mileage_df = load_data(MILEAGE_FILE)
+                                df = pd.read_csv(DATA_FILE)
+                                mileage_df = pd.read_csv(MILEAGE_FILE)
                                 
                                 df = df[df["submission_id"] != row["submission_id"]]
                                 df.to_csv(DATA_FILE, index=False)
@@ -669,8 +669,8 @@ else:
             # Manage Vehicles
             with manage_tabs[0]:
                 st.write("### Manage Vehicles")
-                vehicles_df = load_data(VEHICLES_FILE)
-                employees_df = load_data(EMPLOYEES_FILE)
+                vehicles_df = pd.read_csv(VEHICLES_FILE)
+                employees_df = pd.read_csv(EMPLOYEES_FILE)
                 vehicles_df["Assigned To"] = vehicles_df["Vehicle"].apply(
                     lambda x: employees_df[employees_df["Assigned_Vehicle"] == x]["Employee"].iloc[0]
                     if x in employees_df["Assigned_Vehicle"].values else "Unassigned"
@@ -705,11 +705,11 @@ else:
                                         employees_df["Assigned_Vehicle"] = employees_df["Assigned_Vehicle"].replace(old_name, new_name)
                                         employees_df.to_csv(EMPLOYEES_FILE, index=False)
 
-                                        df = load_data(DATA_FILE)
+                                        df = pd.read_csv(DATA_FILE)
                                         df["Vehicle"] = df["Vehicle"].replace(old_name, new_name)
                                         df.to_csv(DATA_FILE, index=False)
 
-                                        mileage_df = load_data(MILEAGE_FILE)
+                                        mileage_df = pd.read_csv(MILEAGE_FILE)
                                         mileage_df["Vehicle"] = mileage_df["Vehicle"].replace(old_name, new_name)
                                         mileage_df.to_csv(MILEAGE_FILE, index=False)
 
@@ -753,11 +753,11 @@ else:
                                     employees_df["Assigned_Vehicle"] = employees_df["Assigned_Vehicle"].replace(vehicle_name, "")
                                     employees_df.to_csv(EMPLOYEES_FILE, index=False)
 
-                                    df = load_data(DATA_FILE)
+                                    df = pd.read_csv(DATA_FILE)
                                     df = df[df["Vehicle"] != vehicle_name]
                                     df.to_csv(DATA_FILE, index=False)
 
-                                    mileage_df = load_data(MILEAGE_FILE)
+                                    mileage_df = pd.read_csv(MILEAGE_FILE)
                                     mileage_df = mileage_df[mileage_df["Vehicle"] != vehicle_name]
                                     mileage_df.to_csv(MILEAGE_FILE, index=False)
 
@@ -767,7 +767,7 @@ else:
             
             with manage_tabs[1]:
                 st.write("### Manage Employees")
-                employees_df = load_data(EMPLOYEES_FILE)
+                employees_df = pd.read_csv(EMPLOYEES_FILE)
                 st.dataframe(employees_df)
                 
                 st.write("#### Add Employee")
@@ -775,7 +775,7 @@ else:
                     new_emp = st.text_input("Employee Name")
                     new_user = st.text_input("Username")
                     new_pass = st.text_input("Password", type="password")
-                    vehicles_df = load_data(VEHICLES_FILE)
+                    vehicles_df = pd.read_csv(VEHICLES_FILE)
                     av_vehicles = [""] + [v for v in vehicles_df["Vehicle"] if v not in employees_df["Assigned_Vehicle"].values]
                     as_vehicles = [f"{v} (Assigned to {employees_df[employees_df['Assigned_Vehicle'] == v]['Employee'].iloc[0]})" for v in vehicles_df["Vehicle"] if v not in av_vehicles and v != ""]
                     vehicle_opts = av_vehicles + as_vehicles
@@ -840,11 +840,11 @@ else:
                                                 employees_df.at[idx, "Assigned_Vehicle"] = edit_vehicle
                                                 employees_df.to_csv(EMPLOYEES_FILE, index=False)
 
-                                                df = load_data(DATA_FILE)
+                                                df = pd.read_csv(DATA_FILE)
                                                 df["Employee"] = df["Employee"].replace(row["Employee"], edit_name)
                                                 df.to_csv(DATA_FILE, index=False)
 
-                                                mileage_df = load_data(MILEAGE_FILE)
+                                                mileage_df = pd.read_csv(MILEAGE_FILE)
                                                 mileage_df["Employee"] = mileage_df["Employee"].replace(row["Employee"], edit_name)
                                                 mileage_df.to_csv(MILEAGE_FILE, index=False)
 
@@ -862,11 +862,11 @@ else:
                                                     employees_df.at[idx, "Assigned_Vehicle"] = vehicle_name
                                                     employees_df.to_csv(EMPLOYEES_FILE, index=False)
 
-                                                    df = load_data(DATA_FILE)
+                                                    df = pd.read_csv(DATA_FILE)
                                                     df["Employee"] = df["Employee"].replace(row["Employee"], edit_name)
                                                     df.to_csv(DATA_FILE, index=False)
 
-                                                    mileage_df = load_data(MILEAGE_FILE)
+                                                    mileage_df = pd.read_csv(MILEAGE_FILE)
                                                     mileage_df["Employee"] = mileage_df["Employee"].replace(row["Employee"], edit_name)
                                                     mileage_df.to_csv(MILEAGE_FILE, index=False)
 
@@ -883,11 +883,11 @@ else:
                                     employees_df = employees_df.drop(idx)
                                     employees_df.to_csv(EMPLOYEES_FILE, index=False)
 
-                                    df = load_data(DATA_FILE)
+                                    df = pd.read_csv(DATA_FILE)
                                     df = df[df["Employee"] != emp_name]
                                     df.to_csv(DATA_FILE, index=False)
 
-                                    mileage_df = load_data(MILEAGE_FILE)
+                                    mileage_df = pd.read_csv(MILEAGE_FILE)
                                     mileage_df = mileage_df[mileage_df["Employee"] != emp_name]
                                     mileage_df.to_csv(MILEAGE_FILE, index=False)
 
