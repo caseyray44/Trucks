@@ -3,7 +3,6 @@ import pandas as pd
 import os
 import uuid
 from datetime import datetime, timedelta
-import altair as alt
 
 # Inject custom CSS for styling
 st.markdown("""
@@ -177,7 +176,7 @@ def load_data(file_path):
 os.makedirs("data", exist_ok=True)
 if not os.path.exists(DATA_FILE):
     pd.DataFrame(columns=[
-        "submission_id",  # Unique ID column
+        "submission_id",  # NEW unique ID column
         "Employee", "Vehicle", "Date",
         "Tire_FL_PSI", "Tire_FR_PSI", "Tire_RL_PSI", "Tire_RR_PSI", "Tire_Comments",
         "Headlights_OK", "Taillights_OK", "Brake_Lights_OK", "Turn_Signals_OK", "Lights_Comments",
@@ -192,7 +191,7 @@ if not os.path.exists(DATA_FILE):
 
 if not os.path.exists(MILEAGE_FILE):
     pd.DataFrame(columns=[
-        "submission_id",  # Unique ID column for mileage
+        "submission_id",  # NEW unique ID column
         "Employee", "Vehicle", "Date", 
         "Mileage", "Mileage_Comments"
     ]).to_csv(MILEAGE_FILE, index=False)
@@ -421,27 +420,23 @@ else:
         st.subheader("Admin Dashboard")
         tabs = st.tabs(["🚛 Trucks", "👥 Employees", "⚙️ Manage Data"])
 
+        # -------------------------------
         # Trucks Tab
+        # -------------------------------
         with tabs[0]:
             st.subheader("Truck Overview")
             vehicles_df = load_data(VEHICLES_FILE)
             selected_vehicle = st.selectbox("Select Vehicle", vehicles_df["Vehicle"])
             
-            # Mileage History using Altair so y-axis starts at 0
+            # Mileage History
             with st.container(key="milage_container"):
                 st.markdown('<div class="card">', unsafe_allow_html=True)
                 st.write("### Mileage History (1 Year)")
                 mileage_df = load_data(MILEAGE_FILE)
                 mileage_df["Date"] = pd.to_datetime(mileage_df["Date"])
-                # Ensure Mileage is numeric
-                mileage_df["Mileage"] = pd.to_numeric(mileage_df["Mileage"], errors="coerce").fillna(0)
                 vehicle_mileage = mileage_df[mileage_df["Vehicle"] == selected_vehicle].copy()
                 if not vehicle_mileage.empty:
-                    chart = alt.Chart(vehicle_mileage.reset_index()).mark_line(point=True).encode(
-                        x=alt.X('Date:T', title="Date"),
-                        y=alt.Y('Mileage:Q', scale=alt.Scale(domain=[0, vehicle_mileage["Mileage"].max() * 1.1]), title="Mileage")
-                    )
-                    st.altair_chart(chart, use_container_width=True)
+                    st.line_chart(vehicle_mileage.set_index("Date")["Mileage"])
                     st.dataframe(vehicle_mileage[["Date", "Employee", "Mileage", "Mileage_Comments"]])
                 else:
                     st.write("No mileage data for this vehicle.")
@@ -538,17 +533,19 @@ else:
                             st.write("**Notes**")
                             st.write(row["Notes"])
 
-                            # Delete button using submission_id
-                            if st.button("Delete this submission", key=f"delete_{row['submission_id']}"):
+                            # Fixing the DuplicateElementKey by changing the button key
+                            if st.button("Delete this submission", key=f"delete_recent_sub_{row['submission_id']}"):
                                 df = load_data(DATA_FILE)
                                 mileage_df = load_data(MILEAGE_FILE)
-                                
+
+                                # Remove from submissions
                                 df = df[df["submission_id"] != row["submission_id"]]
                                 df.to_csv(DATA_FILE, index=False)
-                                
+
+                                # Remove from mileage
                                 mileage_df = mileage_df[mileage_df["submission_id"] != row["submission_id"]]
                                 mileage_df.to_csv(MILEAGE_FILE, index=False)
-                                
+
                                 st.success("Submission deleted from both CSVs.")
                                 st.rerun()
                     st.markdown('</div>', unsafe_allow_html=True)
@@ -601,7 +598,6 @@ else:
 
                 st.markdown('<div class="card">', unsafe_allow_html=True)
                 st.write("### Weekly Check-Ins")
-                # Use .map instead of .applymap to fix errors
                 st.dataframe(checkin_df.style.map(color_status, subset=["Check-In Status"]))
                 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -664,17 +660,19 @@ else:
                             st.write("**Notes**")
                             st.write(row["Notes"])
 
-                            # Delete button using submission_id
-                            if st.button("Delete this submission", key=f"delete_{row['submission_id']}"):
+                            # Different key prefix so we don't clash with "recent submissions"
+                            if st.button("Delete this submission", key=f"delete_emp_sub_{row['submission_id']}"):
                                 df = load_data(DATA_FILE)
                                 mileage_df = load_data(MILEAGE_FILE)
                                 
+                                # Remove from submissions
                                 df = df[df["submission_id"] != row["submission_id"]]
                                 df.to_csv(DATA_FILE, index=False)
-                                
+
+                                # Remove from mileage
                                 mileage_df = mileage_df[mileage_df["submission_id"] != row["submission_id"]]
                                 mileage_df.to_csv(MILEAGE_FILE, index=False)
-                                
+
                                 st.success("Submission deleted.")
                                 st.rerun()
                 else:
@@ -719,7 +717,8 @@ else:
                         with col1:
                             with st.form(key=f"edit_vehicle_{idx}"):
                                 new_name = st.text_input("Edit Vehicle Name", value=row["Vehicle"], key=f"edit_vehicle_input_{idx}")
-                                if st.form_submit_button("Edit", type="secondary"):
+                                submitted_edit = st.form_submit_button("Edit", type="secondary")
+                                if submitted_edit:
                                     if new_name and new_name not in vehicles_df["Vehicle"].values:
                                         old_name = row["Vehicle"]
                                         vehicles_df.at[idx, "Vehicle"] = new_name
@@ -743,11 +742,19 @@ else:
 
                         with col2:
                             with st.form(key=f"assign_vehicle_{idx}"):
-                                available_emps = [""] + [emp for emp in employees_df["Employee"] if emp not in employees_df[employees_df["Assigned_Vehicle"] != ""]["Employee"].values]
-                                assigned_emps = [f"{emp} (Assigned to {employees_df[employees_df['Employee'] == emp]['Assigned_Vehicle'].iloc[0]})" for emp in employees_df["Employee"] if emp not in available_emps and emp != ""]
+                                available_emps = [""] + [
+                                    emp for emp in employees_df["Employee"] 
+                                    if emp not in employees_df[employees_df["Assigned_Vehicle"] != ""]["Employee"].values
+                                ]
+                                assigned_emps = [
+                                    f"{emp} (Assigned to {employees_df[employees_df['Employee'] == emp]['Assigned_Vehicle'].iloc[0]})"
+                                    for emp in employees_df["Employee"]
+                                    if emp not in available_emps and emp != ""
+                                ]
                                 employee_options = available_emps + assigned_emps
                                 selected_emp = st.selectbox("Assign Employee", employee_options, key=f"assign_emp_{idx}")
-                                if st.form_submit_button("Assign", type="primary"):
+                                submitted_assign = st.form_submit_button("Assign", type="primary")
+                                if submitted_assign:
                                     if selected_emp:
                                         if selected_emp in available_emps:
                                             employees_df.loc[employees_df["Employee"] == selected_emp, "Assigned_Vehicle"] = row["Vehicle"]
@@ -764,33 +771,39 @@ else:
                                                 employees_df.to_csv(EMPLOYEES_FILE, index=False)
                                                 st.success(f"Reassigned {emp_name} to {row['Vehicle']}")
                                                 st.rerun()
+
                         with col3:
-                            if st.button("Delete Vehicle", key=f"delete_vehicle_{idx}", type="secondary"):
+                            if st.button("Delete Vehicle", key=f"delete_vehicle_mgmt_{idx}", type="secondary"):
                                 if st.checkbox("Confirm deletion", key=f"confirm_delete_vehicle_{idx}"):
                                     vehicle_name = row["Vehicle"]
                                     vehicles_df = vehicles_df.drop(idx)
                                     vehicles_df.to_csv(VEHICLES_FILE, index=False)
-                                    
+
+                                    # unassign from employees
                                     employees_df["Assigned_Vehicle"] = employees_df["Assigned_Vehicle"].replace(vehicle_name, "")
                                     employees_df.to_csv(EMPLOYEES_FILE, index=False)
-                                    
+
+                                    # remove from submissions + mileage
                                     df = load_data(DATA_FILE)
                                     df = df[df["Vehicle"] != vehicle_name]
                                     df.to_csv(DATA_FILE, index=False)
-                                    
+
                                     mileage_df = load_data(MILEAGE_FILE)
                                     mileage_df = mileage_df[mileage_df["Vehicle"] != vehicle_name]
                                     mileage_df.to_csv(MILEAGE_FILE, index=False)
-                                    
+
                                     st.success(f"Deleted vehicle {vehicle_name}")
                                     st.rerun()
-                        st.markdown('</div>', unsafe_allow_html=True)
-            
+
+            # -------------------------------
+            # Manage Employees
+            # -------------------------------
             with manage_tabs[1]:
                 st.write("### Manage Employees")
                 employees_df = load_data(EMPLOYEES_FILE)
                 st.dataframe(employees_df)
-                
+
+                # Add employee
                 st.write("#### Add Employee")
                 with st.form(key="add_employee_form"):
                     new_emp = st.text_input("Employee Name")
@@ -798,10 +811,14 @@ else:
                     new_pass = st.text_input("Password", type="password")
                     vehicles_df = load_data(VEHICLES_FILE)
                     av_vehicles = [""] + [v for v in vehicles_df["Vehicle"] if v not in employees_df["Assigned_Vehicle"].values]
-                    as_vehicles = [f"{v} (Assigned to {employees_df[employees_df['Assigned_Vehicle'] == v]['Employee'].iloc[0]})" for v in vehicles_df["Vehicle"] if v not in av_vehicles and v != ""]
+                    as_vehicles = [
+                        f"{v} (Assigned to {employees_df[employees_df['Assigned_Vehicle'] == v]['Employee'].iloc[0]})"
+                        for v in vehicles_df["Vehicle"] if v not in av_vehicles and v != ""
+                    ]
                     vehicle_opts = av_vehicles + as_vehicles
                     new_assigned = st.selectbox("Assigned Vehicle", vehicle_opts)
-                    if st.form_submit_button("Add Employee", type="primary"):
+                    submitted_new_emp = st.form_submit_button("Add Employee", type="primary")
+                    if submitted_new_emp:
                         if new_emp and new_user and new_pass:
                             if new_user not in employees_df["Username"].values:
                                 if new_assigned in av_vehicles:
@@ -816,6 +833,7 @@ else:
                                     st.success(f"Added {new_emp}")
                                     st.rerun()
                                 else:
+                                    # already assigned
                                     vehicle_name = new_assigned.split(" (Assigned to")[0]
                                     current_emp = employees_df[employees_df["Assigned_Vehicle"] == vehicle_name]["Employee"].iloc[0]
                                     st.warning(f"{vehicle_name} is already assigned to {current_emp}. Reassign to {new_emp}?")
@@ -836,6 +854,7 @@ else:
                         else:
                             st.error("All fields are required.")
 
+                # Edit / Delete employees
                 for idx, row in employees_df.iterrows():
                     with st.expander(f"Manage {row['Employee']}"):
                         col1, col2 = st.columns([2,1])
@@ -844,30 +863,40 @@ else:
                                 edit_name = st.text_input("Employee Name", value=row["Employee"], key=f"edit_name_{idx}")
                                 edit_user = st.text_input("Username", value=row["Username"], key=f"edit_user_{idx}")
                                 edit_pass = st.text_input("Password", value=row["Password"], type="password", key=f"edit_pass_{idx}")
+
                                 av_vehicles = [""] + [v for v in vehicles_df["Vehicle"] if v not in employees_df[employees_df["Employee"] != row["Employee"]]["Assigned_Vehicle"].values]
-                                as_vehicles = [f"{v} (Assigned to {employees_df[employees_df['Assigned_Vehicle'] == v]['Employee'].iloc[0]})" for v in vehicles_df["Vehicle"] if v not in av_vehicles and v != ""]
+                                as_vehicles = [
+                                    f"{v} (Assigned to {employees_df[employees_df['Assigned_Vehicle'] == v]['Employee'].iloc[0]})"
+                                    for v in vehicles_df["Vehicle"] if v not in av_vehicles and v != ""
+                                ]
                                 vehicle_opts = av_vehicles + as_vehicles
                                 current_vehicle = row["Assigned_Vehicle"]
-                                start_index = vehicle_opts.index(current_vehicle) if current_vehicle in vehicle_opts else 0
+                                if current_vehicle in vehicle_opts:
+                                    start_index = vehicle_opts.index(current_vehicle)
+                                else:
+                                    start_index = 0
                                 edit_vehicle = st.selectbox("Assigned Vehicle", vehicle_opts, index=start_index, key=f"edit_vehicle_{idx}")
+
                                 if st.form_submit_button("Edit Employee", type="secondary"):
                                     if edit_name and edit_user and edit_pass:
+                                        # check username collision
                                         if edit_user == row["Username"] or edit_user not in employees_df["Username"].values:
+                                            # if new vehicle is available
                                             if edit_vehicle in av_vehicles:
                                                 employees_df.at[idx, "Employee"] = edit_name
                                                 employees_df.at[idx, "Username"] = edit_user
                                                 employees_df.at[idx, "Password"] = edit_pass
                                                 employees_df.at[idx, "Assigned_Vehicle"] = edit_vehicle
                                                 employees_df.to_csv(EMPLOYEES_FILE, index=False)
-                                                
+
                                                 df = load_data(DATA_FILE)
                                                 df["Employee"] = df["Employee"].replace(row["Employee"], edit_name)
                                                 df.to_csv(DATA_FILE, index=False)
-                                                
+
                                                 mileage_df = load_data(MILEAGE_FILE)
                                                 mileage_df["Employee"] = mileage_df["Employee"].replace(row["Employee"], edit_name)
                                                 mileage_df.to_csv(MILEAGE_FILE, index=False)
-                                                
+
                                                 st.success(f"Updated {edit_name}")
                                                 st.rerun()
                                             else:
@@ -881,38 +910,38 @@ else:
                                                     employees_df.at[idx, "Password"] = edit_pass
                                                     employees_df.at[idx, "Assigned_Vehicle"] = vehicle_name
                                                     employees_df.to_csv(EMPLOYEES_FILE, index=False)
-                                                    
+
                                                     df = load_data(DATA_FILE)
                                                     df["Employee"] = df["Employee"].replace(row["Employee"], edit_name)
                                                     df.to_csv(DATA_FILE, index=False)
-                                                    
+
                                                     mileage_df = load_data(MILEAGE_FILE)
                                                     mileage_df["Employee"] = mileage_df["Employee"].replace(row["Employee"], edit_name)
                                                     mileage_df.to_csv(MILEAGE_FILE, index=False)
-                                                    
+
                                                     st.success(f"Updated {edit_name} and reassigned {vehicle_name}")
                                                     st.rerun()
                                         else:
                                             st.error("Username already exists.")
                                     else:
                                         st.error("All fields are required.")
+
                         with col2:
-                            if st.button("Delete Employee", key=f"delete_emp_{idx}", type="secondary"):
+                            # Changed the delete key to avoid duplication
+                            if st.button("Delete Employee", key=f"delete_employee_mgmt_{idx}", type="secondary"):
                                 if st.checkbox("Confirm Deletion", key=f"confirm_emp_{idx}"):
                                     emp_name = row["Employee"]
                                     employees_df = employees_df.drop(idx)
                                     employees_df.to_csv(EMPLOYEES_FILE, index=False)
-                                    
+
                                     df = load_data(DATA_FILE)
                                     df = df[df["Employee"] != emp_name]
                                     df.to_csv(DATA_FILE, index=False)
-                                    
+
                                     mileage_df = load_data(MILEAGE_FILE)
                                     mileage_df = mileage_df[mileage_df["Employee"] != emp_name]
                                     mileage_df.to_csv(MILEAGE_FILE, index=False)
-                                    
+
                                     st.success(f"Deleted {emp_name}")
                                     st.rerun()
                         st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
