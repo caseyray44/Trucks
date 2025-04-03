@@ -9,6 +9,7 @@ import altair as alt
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
     body {
         font-family: 'Poppins', sans-serif;
         background-color: #f5f5f5;
@@ -57,8 +58,10 @@ st.markdown("""
     .stButton>button[label*="Delete"]:hover {
         background-color: #c0392b;
     }
+
     /* Ensure selectbox and text inputs are readable on all devices */
-    .stSelectbox>div>div, .stTextInput>div>input {
+    .stSelectbox>div>div,
+    .stTextInput>div>input {
         background-color: #ffffff !important;
         color: #2c3e50 !important;
         border-radius: 8px;
@@ -66,11 +69,13 @@ st.markdown("""
         padding: 10px;
         font-size: 16px;
     }
-    /* Fix placeholder text color */
+
+    /* Fix placeholder text color for text inputs */
     .stTextInput>div>input::placeholder {
         color: #7f8c8d !important;
         opacity: 1;
     }
+
     .stExpander {
         border: 1px solid #ecf0f1;
         border-radius: 8px;
@@ -87,6 +92,7 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         margin-bottom: 20px;
     }
+
     /* Ensure form labels are visible on all devices */
     div[data-testid="stForm"] label {
         color: #2c3e50 !important;
@@ -94,6 +100,7 @@ st.markdown("""
         font-weight: 600 !important;
         margin-bottom: 5px !important;
     }
+
     /* Force label color for selectboxes outside stForm */
     div[data-testid="stSelectbox"] label {
         color: #2c3e50 !important;
@@ -101,6 +108,7 @@ st.markdown("""
         font-weight: 600 !important;
         margin-bottom: 5px !important;
     }
+
     /* Mobile-specific styles */
     @media only screen and (max-width: 600px) {
         /* Force light theme on mobile */
@@ -124,7 +132,8 @@ st.markdown("""
         div[data-testid="stSelectbox"], div[data-testid="stTextInput"] {
             margin-bottom: 20px !important;
         }
-        div[data-testid="stSelectbox"]>div>div, div[data-testid="stTextInput"]>div>input {
+        div[data-testid="stSelectbox"]>div>div,
+        div[data-testid="stTextInput"]>div>input {
             width: 100% !important;
             padding: 12px !important;
             font-size: 16px !important;
@@ -167,10 +176,20 @@ st.markdown("""
             padding: 10px !important;
         }
     }
+
     /* Force all text in the app to use a visible dark color */
     .stApp, .stApp * {
         color: #2c3e50 !important;
     }
+
+    /* Force the selectbox selected text & placeholder to be dark as well */
+    /* The classes below typically correspond to the "selected value" and placeholder in Streamlit's selectbox. */
+    div[data-testid="stSelectbox"] .css-1wa3eu0-placeholder,
+    div[data-testid="stSelectbox"] .css-1wa3eu0-singleValue {
+        color: #2c3e50 !important;
+        opacity: 1 !important;
+    }
+
     </style>
 """, unsafe_allow_html=True)
 
@@ -180,7 +199,6 @@ MILEAGE_FILE = "data/mileage_log.csv"
 VEHICLES_FILE = "data/vehicles.csv"
 EMPLOYEES_FILE = "data/employees.csv"
 
-# Use direct file reads so changes are immediately visible
 def load_data(file_path):
     return pd.read_csv(file_path)
 
