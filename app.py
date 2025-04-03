@@ -183,9 +183,15 @@ st.markdown("""
     }
 
     /* Force the selectbox selected text & placeholder to be dark as well */
-    /* The classes below typically correspond to the "selected value" and placeholder in Streamlit's selectbox. */
     div[data-testid="stSelectbox"] .css-1wa3eu0-placeholder,
     div[data-testid="stSelectbox"] .css-1wa3eu0-singleValue {
+        color: #2c3e50 !important;
+        opacity: 1 !important;
+    }
+
+    /* A broader approach: force color on the entire control & children */
+    div[data-testid="stSelectbox"] .css-1wa3eu0-control,
+    div[data-testid="stSelectbox"] .css-1wa3eu0-control * {
         color: #2c3e50 !important;
         opacity: 1 !important;
     }
