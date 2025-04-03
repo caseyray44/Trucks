@@ -58,6 +58,7 @@ st.markdown("""
     .stButton>button[label*="Delete"]:hover {
         background-color: #c0392b;
     }
+
     /* Ensure selectbox and text inputs are readable on all devices */
     .stSelectbox>div>div,
     .stTextInput>div>input {
@@ -68,11 +69,29 @@ st.markdown("""
         padding: 10px;
         font-size: 16px;
     }
+
     /* Fix placeholder text color for text inputs */
     .stTextInput>div>input::placeholder {
         color: #7f8c8d !important;
         opacity: 1;
     }
+
+    /* Fix placeholder and selected text for selectbox */
+    div[data-testid="stSelectbox"] .css-1wa3eu0-placeholder,
+    div[data-testid="stSelectbox"] .css-1wa3eu0-singleValue {
+        color: #7f8c8d !important;
+        opacity: 1 !important;
+    }
+
+    /* Style the selectbox dropdown items */
+    div[data-testid="stSelectbox"] ul {
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    div[data-testid="stSelectbox"] li {
+        color: #2c3e50 !important;
+    }
+
     .stExpander {
         border: 1px solid #ecf0f1;
         border-radius: 8px;
@@ -89,6 +108,7 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         margin-bottom: 20px;
     }
+
     /* Ensure form labels are visible on all devices */
     div[data-testid="stForm"] label {
         color: #2c3e50 !important;
@@ -96,6 +116,7 @@ st.markdown("""
         font-weight: 600 !important;
         margin-bottom: 5px !important;
     }
+
     /* Force label color for selectboxes outside stForm */
     div[data-testid="stSelectbox"] label {
         color: #2c3e50 !important;
@@ -103,15 +124,19 @@ st.markdown("""
         font-weight: 600 !important;
         margin-bottom: 5px !important;
     }
+
     /* Mobile-specific styles */
     @media only screen and (max-width: 600px) {
+        /* Force light theme on mobile */
         .stApp {
             background-color: #f5f5f5 !important;
             color: #2c3e50 !important;
         }
+        /* Center the title and subheader */
         h1, h2 {
             text-align: center;
         }
+        /* Adjust the form container to be more mobile-friendly */
         div[data-testid="stForm"] {
             padding: 20px !important;
             background-color: #ffffff !important;
@@ -119,6 +144,7 @@ st.markdown("""
             box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
             margin: 15px 0 !important;
         }
+        /* Make selectbox and text inputs full-width with better spacing */
         div[data-testid="stSelectbox"], div[data-testid="stTextInput"] {
             margin-bottom: 20px !important;
         }
@@ -133,6 +159,7 @@ st.markdown("""
             background-color: #ffffff !important;
             color: #2c3e50 !important;
         }
+        /* Fix selectbox dropdown items */
         div[data-testid="stSelectbox"] ul {
             background-color: #ffffff !important;
             color: #2c3e50 !important;
@@ -140,6 +167,7 @@ st.markdown("""
         div[data-testid="stSelectbox"] li {
             color: #2c3e50 !important;
         }
+        /* Style the login button for mobile */
         div[data-testid="stFormSubmitButton"]>button {
             width: 100% !important;
             padding: 15px !important;
@@ -153,30 +181,23 @@ st.markdown("""
         div[data-testid="stFormSubmitButton"]>button:hover {
             background-color: #219653 !important;
         }
+        /* Add spacing around the form */
         div[data-testid="stForm"]>div {
             display: flex !important;
             flex-direction: column !important;
             gap: 20px !important;
         }
+        /* Ensure the app container has padding on mobile */
         .stApp {
             padding: 10px !important;
         }
     }
 
-    /* Force all text in the app to be dark */
+    /* Force all text in the app to use a visible dark color */
     .stApp, .stApp * {
         color: #2c3e50 !important;
     }
 
-    /* BROAD SELECTBOX OVERRIDE:
-       Force the entire selectbox control and its children to use dark text */
-    div[data-testid="stSelectbox"] {
-        color: #2c3e50 !important;
-    }
-    div[data-testid="stSelectbox"] * {
-        color: #2c3e50 !important;
-        opacity: 1 !important;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -224,7 +245,7 @@ if not os.path.exists(EMPLOYEES_FILE):
         "Assigned_Vehicle": ["Jeep", "Karma", "Big Red", "Muffin", "Loud Truck", "2018"]
     }).to_csv(EMPLOYEES_FILE, index=False)
 
-# Initialize session state
+# Initialize session
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.employee_id = ""
@@ -233,17 +254,19 @@ if "logged_in" not in st.session_state:
 
 st.title("Truck Checks App")
 
-# -------------------------------
+# --------------------------------
 # LOGIN LOGIC
-# -------------------------------
+# --------------------------------
 if not st.session_state.logged_in:
     st.subheader("Login")
-    user_type = st.selectbox("User Type", ["Employee", "Admin"])
     with st.form(key="login_form"):
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+        user_type = st.selectbox("User Type", ["", "Employee", "Admin"], index=0, help="Select whether you are an Employee or Admin")
+        username = st.text_input("Username", placeholder="Enter your username")
+        password = st.text_input("Password", type="password", placeholder="Enter your password")
         if st.form_submit_button("Login"):
-            if user_type == "Admin" and username == "admin" and password == "admin123":
+            if not user_type:
+                st.error("Please select a User Type")
+            elif user_type == "Admin" and username == "admin" and password == "admin123":
                 st.session_state.logged_in = True
                 st.session_state.employee_id = "admin"
                 st.session_state.user_type = "admin"
@@ -266,9 +289,9 @@ if not st.session_state.logged_in:
             else:
                 st.error("Wrong username or password")
 else:
-    # -------------------------------
+    # --------------------------------
     # LOGOUT BUTTON
-    # -------------------------------
+    # --------------------------------
     if st.button("Logout"):
         st.session_state.logged_in = False
         st.session_state.employee_id = ""
@@ -276,18 +299,18 @@ else:
         st.session_state.username = ""
         st.rerun()
 
-    # -------------------------------
+    # --------------------------------
     # EMPLOYEE VIEW
-    # -------------------------------
+    # --------------------------------
     if st.session_state.user_type == "employee":
         employees_df = load_data(EMPLOYEES_FILE)
         emp_row = employees_df[employees_df["Employee"] == st.session_state.employee_id].iloc[0]
         assigned_vehicle = emp_row["Assigned_Vehicle"]
-
+        
         st.subheader(f"Welcome, {st.session_state.employee_id}!")
         st.subheader(f"Vehicle: {assigned_vehicle}")
         st.markdown("**Instructions**: Check all items, upload photos if needed, and hit Submit—done!")
-
+        
         check_date = st.date_input("Check Date", value=datetime.now())
         date_str = check_date.strftime("%Y-%m-%d")
 
@@ -426,9 +449,9 @@ else:
 
                 st.success("Check submitted! Thank you.")
 
-    # -------------------------------
+    # --------------------------------
     # ADMIN VIEW
-    # -------------------------------
+    # --------------------------------
     else:
         st.subheader("Admin Dashboard")
         tabs = st.tabs(["🚛 Trucks", "👥 Employees", "⚙️ Manage Data"])
@@ -440,7 +463,7 @@ else:
             st.subheader("Truck Overview")
             vehicles_df = pd.read_csv(VEHICLES_FILE)
             selected_vehicle = st.selectbox("Select Vehicle", vehicles_df["Vehicle"])
-
+            
             # Mileage History
             with st.container(key="milage_container"):
                 st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -454,7 +477,7 @@ else:
                 else:
                     st.write("No mileage data for this vehicle.")
                 st.markdown('</div>', unsafe_allow_html=True)
-
+            
             # Consolidate vehicle submissions once
             df = pd.read_csv(DATA_FILE)
             df["Date"] = pd.to_datetime(df["Date"])
@@ -473,7 +496,7 @@ else:
                 else:
                     st.write("No recent notes for this vehicle.")
                 st.markdown('</div>', unsafe_allow_html=True)
-
+            
             # Recent Submissions
             with st.container(key="submissions_container"):
                 st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -741,6 +764,7 @@ else:
                                         st.rerun()
                                     else:
                                         st.error("Vehicle name cannot be empty or already exists.")
+
                         with col2:
                             with st.form(key=f"assign_vehicle_{idx}"):
                                 available_emps = [""] + [emp for emp in employees_df["Employee"] if emp not in employees_df[employees_df["Assigned_Vehicle"] != ""]["Employee"].values]
@@ -765,6 +789,7 @@ else:
                                                 employees_df.to_csv(EMPLOYEES_FILE, index=False)
                                                 st.success(f"Reassigned {emp_name} to {row['Vehicle']}")
                                                 st.rerun()
+
                         with col3:
                             if st.button("Delete Vehicle", key=f"delete_vehicle_mgmt_{idx}", type="secondary"):
                                 if st.checkbox("Confirm deletion", key=f"confirm_delete_vehicle_{idx}"):
@@ -916,4 +941,3 @@ else:
                                     st.success(f"Deleted {emp_name}")
                                     st.rerun()
                         st.markdown('</div>', unsafe_allow_html=True)
-
