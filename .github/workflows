@@ -1,0 +1,11 @@
+name: Keep TruckCheck App Awake
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Runs every 15 minutes
+  workflow_dispatch:  # Allows manual triggering
+jobs:
+  wake-up:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit App
+        run: curl https://truckcheck.streamlit.app/
