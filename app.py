@@ -286,28 +286,40 @@ else:
                 st.dataframe(pd.DataFrame(status))
 
         # --- Manage Data ---
-        with tabs[2]:
-            st.subheader("Manage Vehicles & Employees")
-            vdf = load_data(VEHICLES_FILE)
-            edf = load_data(EMPLOYEES_FILE)
-
-            st.markdown("#### Vehicles")
-            new_v = st.text_input("Add New Vehicle")
-            if st.button("Add Vehicle") and new_v and new_v not in vdf['Vehicle'].values:
-                vdf = pd.concat([vdf,pd.DataFrame([{'Vehicle':new_v}])],ignore_index=True)
-                save_data(vdf,VEHICLES_FILE)
+    with tabs[2]:
+        st.subheader("Manage Vehicles & Employees")
+        # Vehicles
+        st.markdown("#### Vehicles")
+        vdf = load_data(VEHICLES_FILE)
+        new_v = st.text_input("Add New Vehicle", key="new_vehicle")
+        if st.button("Add Vehicle") and new_v and new_v not in vdf["Vehicle"].values:
+            vdf = pd.concat([vdf, pd.DataFrame([{'Vehicle': new_v}])], ignore_index=True)
+            save_data(vdf, VEHICLES_FILE)
+            st.experimental_rerun()
+        for idx, row in vdf.iterrows():
+            col1, col2 = st.columns([3,1])
+            col1.write(row['Vehicle'])
+            if col2.button("Delete", key=f"del_v_{idx}"):
+                vdf = vdf.drop(idx)
+                save_data(vdf, VEHICLES_FILE)
                 st.experimental_rerun()
-            st.dataframe(vdf)
 
-            st.markdown("#### Employees")
-            st.dataframe(edf)
-            new_e = st.text_input("Add New Employee Name")
-            new_u = st.text_input("Username")
-            new_p = st.text_input("Password", type="password")
-            choice = st.selectbox("Assign Vehicle", ['']+vdf['Vehicle'].tolist())
-            if st.button("Add Employee") and new_e and new_u and new_p and new_u not in edf['Username'].values:
-                edf = pd.concat([edf,pd.DataFrame([{
-                    'Employee':new_e,'Username':new_u,'Password':new_p,'Assigned_Vehicle':choice
-                }])],ignore_index=True)
-                save_data(edf,EMPLOYEES_FILE)
+        # Employees
+        st.markdown("#### Employees")
+        edf = load_data(EMPLOYEES_FILE)
+        # Add Employee
+        new_e = st.text_input("Add New Employee Name", key="new_emp")
+        new_u = st.text_input("Username", key="new_user")
+        new_p = st.text_input("Password", type="password", key="new_pass")
+        choice = st.selectbox("Assign Vehicle", [""]+vdf['Vehicle'].tolist(), key="new_assign")
+        if st.button("Add Employee") and new_e and new_u and new_p and new_u not in edf['Username'].values:
+            edf = pd.concat([edf, pd.DataFrame([{'Employee': new_e, 'Username': new_u, 'Password': new_p, 'Assigned_Vehicle': choice}])], ignore_index=True)
+            save_data(edf, EMPLOYEES_FILE)
+            st.experimental_rerun()
+        for idx, row in edf.iterrows():
+            col1, col2 = st.columns([3,1])
+            col1.write(f"{row['Employee']} ({row['Assigned_Vehicle']})")
+            if col2.button("Delete", key=f"del_e_{idx}"):
+                edf = edf.drop(idx)
+                save_data(edf, EMPLOYEES_FILE)
                 st.experimental_rerun()
