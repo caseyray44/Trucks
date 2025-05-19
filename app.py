@@ -78,7 +78,7 @@ def do_login():
         if submit:
             if user_type == "Admin" and username == "admin" and password == "admin123":
                 st.session_state.update({"logged_in": True, "user_type": "admin", "employee_id": "admin", "username": username})
-                st.experimental_rerun()
+                st.rerun()
             elif user_type == "Employee":
                 emp_df = load_data(EMPLOYEES_FILE)
                 match = emp_df[(emp_df.Username == username) & (emp_df.Password == password)]
@@ -89,7 +89,7 @@ def do_login():
                         "employee_id": match.iloc[0]["Employee"],
                         "username": username
                     })
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("Wrong username or password")
             else:
@@ -98,7 +98,7 @@ def do_login():
 def do_logout():
     if st.button("Logout"):
         st.session_state.update({"logged_in": False, "user_type": "", "username": "", "employee_id": ""})
-        st.experimental_rerun()
+        st.rerun()
 
 # --- Main ---
 if not st.session_state.logged_in:
@@ -295,14 +295,14 @@ else:
         if st.button("Add Vehicle") and new_v and new_v not in vdf["Vehicle"].values:
             vdf = pd.concat([vdf, pd.DataFrame([{'Vehicle': new_v}])], ignore_index=True)
             save_data(vdf, VEHICLES_FILE)
-            st.experimental_rerun()
+            st.rerun()
         for idx, row in vdf.iterrows():
             col1, col2 = st.columns([3,1])
             col1.write(row['Vehicle'])
             if col2.button("Delete", key=f"del_v_{idx}"):
                 vdf = vdf.drop(idx)
                 save_data(vdf, VEHICLES_FILE)
-                st.experimental_rerun()
+                st.rerun()
 
         # Employees
         st.markdown("#### Employees")
@@ -315,11 +315,11 @@ else:
         if st.button("Add Employee") and new_e and new_u and new_p and new_u not in edf['Username'].values:
             edf = pd.concat([edf, pd.DataFrame([{'Employee': new_e, 'Username': new_u, 'Password': new_p, 'Assigned_Vehicle': choice}])], ignore_index=True)
             save_data(edf, EMPLOYEES_FILE)
-            st.experimental_rerun()
+            st.rerun()
         for idx, row in edf.iterrows():
             col1, col2 = st.columns([3,1])
             col1.write(f"{row['Employee']} ({row['Assigned_Vehicle']})")
             if col2.button("Delete", key=f"del_e_{idx}"):
                 edf = edf.drop(idx)
                 save_data(edf, EMPLOYEES_FILE)
-                st.experimental_rerun()
+                st.rerun()
