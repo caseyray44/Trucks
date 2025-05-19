@@ -81,6 +81,11 @@ def do_login():
                 st.rerun()
             elif user_type == "Employee":
                 emp_df = load_data(EMPLOYEES_FILE)
+                # Trim whitespace and ensure correct types
+                emp_df["Username"] = emp_df["Username"].astype(str).str.strip()
+                emp_df["Password"] = emp_df["Password"].astype(str).str.strip()
+                match = emp_df[(emp_df.Username == username.strip()) & (emp_df.Password == password.strip())]
+                emp_df = load_data(EMPLOYEES_FILE)
                 match = emp_df[(emp_df.Username == username) & (emp_df.Password == password)]
                 if not match.empty:
                     st.session_state.update({
