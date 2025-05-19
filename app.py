@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pandas as pd
 import os
@@ -34,8 +33,7 @@ if not os.path.exists(MILEAGE_FILE):
     ]).to_csv(MILEAGE_FILE, index=False)
 
 if not os.path.exists(VEHICLES_FILE):
-    pd.DataFrame({"Vehicle": ["Jeep", "Karma", "Big Red", "Muffin", "Loud Truck", "2018"]}) \
-        .to_csv(VEHICLES_FILE, index=False)
+    pd.DataFrame({"Vehicle": ["Jeep", "Karma", "Big Red", "Muffin", "Loud Truck", "2018"]}).to_csv(VEHICLES_FILE, index=False)
 
 if not os.path.exists(EMPLOYEES_FILE):
     pd.DataFrame({
@@ -49,7 +47,7 @@ if not os.path.exists(EMPLOYEES_FILE):
 def load_data(path):
     return pd.read_csv(path)
 
-# Init session state
+# Initialize session state
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.user_type = ""
@@ -98,30 +96,29 @@ if st.button("Logout"):
 
 # --- EMPLOYEE VIEW ---
 if st.session_state.user_type == "employee":
-    employees_df = load_data(EMPLOYEES_FILE)
-    emp_row = employees_df[employees_df["Employee"] == st.session_state.employee_id].iloc[0]
+    emp_df = load_data(EMPLOYEES_FILE)
+    emp_row = emp_df[emp_df["Employee"] == st.session_state.employee_id].iloc[0]
     assigned_vehicle = emp_row["Assigned_Vehicle"]
 
     st.subheader(f"Welcome, {emp_row['Employee']}! Vehicle: {assigned_vehicle}")
     st.markdown("**Instructions**: Check all items, upload photos if needed, and hit Submit—done!")
 
-    # Date
+    # Date input
     check_date = st.date_input("Check Date", value=datetime.now())
     date_str = check_date.strftime("%Y-%m-%d")
 
-    # --- (inputs for tires, lights, cleaning, mileage, wipers, fluids, brakes) ---
-    # For brevity, assume your original inputs remain here unchanged
-    # … your st.number_input, st.checkbox, st.text_area, st.file_uploader, etc. …
+    # === Your original inputs go here (tires, lights, cleaning, mileage, wipers, fluids, brakes) ===
+    # For example:
+    tire_fl_psi = st.number_input("Front Left Tire PSI", min_value=0, max_value=100, value=30)
+    # ... etc.
 
-    # Example oil photo requirement
     oil_photo = st.file_uploader("Upload Oil Level Photo (Required)", type=["jpg", "png"])
 
     if st.button("Submit Check", type="primary"):
         if not oil_photo:
             st.error("Oil level photo is required!")
             st.stop()
-        # Save files and append rows to submissions & mileage logs as in your original code
-        # … existing save logic …
+        # ... your saving logic for submissions and mileage logs ...
         st.success("Check submitted! Thank you.")
     st.stop()
 
@@ -134,7 +131,7 @@ with tabs[0]:
     st.subheader("Truck Overview")
     vehicles_df = load_data(VEHICLES_FILE)
     selected = st.selectbox("Select Vehicle", vehicles_df["Vehicle"])
-    # … your mileage chart, recent notes, recent submissions …
+    # --- your trucks overview chart and recent submissions ---
 
 # Employees Tab
 with tabs[1]:
@@ -143,7 +140,7 @@ with tabs[1]:
     emp_df = load_data(EMPLOYEES_FILE)
     if not df_sub.empty:
         df_sub["Date"] = pd.to_datetime(df_sub["Date"])
-        # … your weekly check-in logic and display …
+        # --- your weekly check-in logic ---
     else:
         st.write("No submissions yet.")
 
@@ -164,4 +161,3 @@ with tabs[2]:
     if st.button("Save Employees"):
         edited_employees.to_csv(EMPLOYEES_FILE, index=False)
         st.success("Employees updated")
-```
