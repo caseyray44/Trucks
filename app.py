@@ -16,7 +16,7 @@ def load_data(path):
     return pd.read_csv(path)
 
 # Ensure CSV files exist
-ios.makedirs("data", exist_ok=True)
+os.makedirs("data", exist_ok=True)
 if not os.path.exists(DATA_FILE):
     pd.DataFrame(columns=[
         "submission_id","Employee","Vehicle","Date",
