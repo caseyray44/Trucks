@@ -41,33 +41,16 @@ if not os.path.exists(MILEAGE_FILE):
 
 if not os.path.exists(VEHICLES_FILE):
     pd.DataFrame({
-        "Vehicle": [
-            "Loud truck", "Big Red", "Jeep", "Karma", "Ugly Duckling",
-            "Wash truck", "2018", "Ranger Danger", "2015"
-        ]
+        "Vehicle": ["Loud Truck", "Big Red", "Jeep", "Karma", "Ugly Duckling", "Wash Truck", "2018", "Ranger Danger", "2015"]
     }).to_csv(VEHICLES_FILE, index=False)
 
 if not os.path.exists(EMPLOYEES_FILE):
     pd.DataFrame({
-        "Employee": [
-            "Hayden", "Cody", "Damon", "Casey", "Mason",
-            "Grayson", "Colby", "Jack", "Kasey"
-        ],
-        "Username": [
-            "Hayden", "Cody", "Damon", "Casey", "Mason",
-            "Grayson", "Colby", "Jack", "Kasey"
-        ],
-        "Password": [
-            "password", "password", "password", "password", "password",
-            "password", "password", "password", "password"
-        ],
-        "Assigned_Vehicle": [
-            "Loud truck", "Big Red", "Jeep", "Karma", "Ugly Duckling",
-            "Wash truck", "2018", "Ranger Danger", "2015"
-        ],
-        "Credit_Card": [
-            "None", "None", "None", "None", "None", "None", "None", "None", "None"
-        ]
+        "Employee": ["Hayden", "Cody", "Damon", "Casey", "Mason", "Grayson", "Colby", "Jack", "Kasey"],
+        "Username": ["Hayden", "Cody", "Damon", "Casey", "Mason", "Grayson", "Colby", "Jack", "Kasey"],
+        "Password": ["password", "password", "password", "password", "password", "password", "password", "password", "password"],
+        "Assigned_Vehicle": ["Loud Truck", "Big Red", "Jeep", "Karma", "Ugly Duckling", "Wash Truck", "2018", "Ranger Danger", "2015"],
+        "Credit_Card": ["None", "None", "None", "None", "Card #2", "None", "None", "None", "None"]
     }).to_csv(EMPLOYEES_FILE, index=False)
 
 # --- Helper functions ---
@@ -105,40 +88,29 @@ def do_login():
                 st.rerun()
             elif user_type == "Employee":
                 try:
-                    # Overwrite the employees file to ensure data is current/clean for logins
+                    # Force recreate the employees file to ensure clean data
                     emp_data = {
-                        "Employee": [
-                            "Hayden", "Cody", "Damon", "Casey", "Mason",
-                            "Grayson", "Colby", "Jack", "Kasey"
-                        ],
-                        "Username": [
-                            "Hayden", "Cody", "Damon", "Casey", "Mason",
-                            "Grayson", "Colby", "Jack", "Kasey"
-                        ],
-                        "Password": [
-                            "password", "password", "password", "password", "password",
-                            "password", "password", "password", "password"
-                        ],
-                        "Assigned_Vehicle": [
-                            "Loud truck", "Big Red", "Jeep", "Karma", "Ugly Duckling",
-                            "Wash truck", "2018", "Ranger Danger", "2015"
-                        ],
-                        "Credit_Card": [
-                            "None", "None", "None", "None", "None", "None", "None", "None", "None"
-                        ]
+                        "Employee": ["Hayden", "Cody", "Damon", "Casey", "Mason", "Grayson", "Colby", "Jack", "Kasey"],
+                        "Username": ["Hayden", "Cody", "Damon", "Casey", "Mason", "Grayson", "Colby", "Jack", "Kasey"],
+                        "Password": ["password", "password", "password", "password", "password", "password", "password", "password", "password"],
+                        "Assigned_Vehicle": ["Loud Truck", "Big Red", "Jeep", "Karma", "Ugly Duckling", "Wash Truck", "2018", "Ranger Danger", "2015"],
+                        "Credit_Card": ["None", "None", "None", "None", "Card #2", "None", "None", "None", "None"]
                     }
                     emp_df = pd.DataFrame(emp_data)
                     save_data(emp_df, EMPLOYEES_FILE)
-
+                    
+                    # Now load and process
                     emp_df = load_data(EMPLOYEES_FILE)
+                    
+                    # Clean the data
                     emp_df["Username"] = emp_df["Username"].astype(str).str.strip()
                     emp_df["Password"] = emp_df["Password"].astype(str).str.strip()
                     
                     usr = username.strip()
                     pwd = password.strip()
                     
-                    # Case-sensitive (first letter capital, rest lower as provided in Username)
-                    match = emp_df[(emp_df["Username"] == usr) & (emp_df["Password"] == pwd)]
+                    # Case-insensitive username matching
+                    match = emp_df[(emp_df["Username"].str.lower() == usr.lower()) & (emp_df["Password"] == pwd)]
                     
                     if not match.empty:
                         st.session_state.update({
