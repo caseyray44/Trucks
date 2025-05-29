@@ -40,14 +40,16 @@ if not os.path.exists(MILEAGE_FILE):
     pd.DataFrame(columns=["submission_id","Employee","Vehicle","Date","Mileage","Mileage_Comments"]).to_csv(MILEAGE_FILE, index=False)
 
 if not os.path.exists(VEHICLES_FILE):
-    pd.DataFrame({"Vehicle": ["Jeep","Karma","Big Red","Muffin","Loud Truck","2018"]}).to_csv(VEHICLES_FILE, index=False)
+    pd.DataFrame({
+        "Vehicle": ["Big Red", "Ugly duckling", "Jeep", "2018", "Black Shoes", "Ranger Danger", "2015", "Pest truck", "Loud Truck", "Karma"]
+    }).to_csv(VEHICLES_FILE, index=False)
 
 if not os.path.exists(EMPLOYEES_FILE):
     pd.DataFrame({
-        "Employee": ["Cody","Mason","Casey","Kasey","Colby","Jack"],
-        "Username": ["cody123","mason123","casey123","kasey123","colby123","jack123"],
-        "Password": ["pass123"]*6,
-        "Assigned_Vehicle": ["Jeep","Karma","Big Red","Muffin","Loud Truck","2018"]
+        "Employee": ["Cody", "Mason", "Damon", "Colby", "Jake", "Jack", "Kasey", "Kasey", "Hayden", "Casey"],
+        "Username": ["Cody", "Mason", "Damon", "Colby", "Jake", "Jack", "Kasey", "Kasey", "Hayden", "Casey"],
+        "Password": ["password", "password", "password", "password", "password", "password", "password", "password", "password", "password"],
+        "Assigned_Vehicle": ["Big Red", "Ugly duckling", "Jeep", "2018", "Black Shoes", "Ranger Danger", "2015", "Pest truck", "Loud Truck", "Karma"]
     }).to_csv(EMPLOYEES_FILE, index=False)
 
 # --- Helper functions ---
@@ -122,10 +124,17 @@ else:
     # --- Employee View ---
     if st.session_state.user_type == "employee":
         emp_df = load_data(EMPLOYEES_FILE)
-        row = emp_df[emp_df.Employee == st.session_state.employee_id].iloc[0]
-        vehicle = row.Assigned_Vehicle
-        st.subheader(f"Welcome, {row.Employee}!")
-        st.write(f"Assigned Vehicle: **{vehicle}**")
+        user_vehicles = emp_df[emp_df.Employee == st.session_state.employee_id]["Assigned_Vehicle"].tolist()
+        
+        st.subheader(f"Welcome, {st.session_state.employee_id}!")
+        
+        # If employee has multiple vehicles, let them choose
+        if len(user_vehicles) > 1:
+            vehicle = st.selectbox("Select Vehicle to Check", user_vehicles)
+        else:
+            vehicle = user_vehicles[0]
+            
+        st.write(f"Vehicle: **{vehicle}**")
         st.markdown("---")
 
         with st.form("check_form", clear_on_submit=True):
@@ -199,7 +208,7 @@ else:
                     df = load_data(DATA_FILE)
                     entry = {
                         "submission_id": sid,
-                        "Employee": row.Employee,
+                        "Employee": st.session_state.employee_id,
                         "Vehicle": vehicle,
                         "Date": date_str,
                         "Tire_FL_PSI": tire_fl,
@@ -236,7 +245,7 @@ else:
                     mdf = load_data(MILEAGE_FILE)
                     mdf = pd.concat([mdf, pd.DataFrame([{
                         "submission_id": sid,
-                        "Employee": row.Employee,
+                        "Employee": st.session_state.employee_id,
                         "Vehicle": vehicle,
                         "Date": date_str,
                         "Mileage": mileage,
@@ -271,7 +280,7 @@ else:
             rec = sd[sd["Vehicle"] == sel].sort_values("Date", ascending=False)
             st.write("### Recent Notes")
             for _, r in rec.iterrows():
-                if pd.notna(r["Notes"]):
+                if pd.notna(r["Notes"]) and r["Notes"]:
                     st.write(f"{r['Date'].date()} - {r['Employee']} - {r['Notes']}")
 
         # --- Employees Tab ---
@@ -287,15 +296,19 @@ else:
                 week_df = sd[sd["Week"] == week]
 
                 emp_df = load_data(EMPLOYEES_FILE)
+                # Group by employee and vehicle to handle multiple vehicles per employee
+                employee_vehicles = emp_df.groupby("Employee")["Assigned_Vehicle"].apply(list).to_dict()
+                
                 rows = []
-                for _, e in emp_df.iterrows():
-                    sub = week_df[week_df["Employee"] == e["Employee"]]
-                    rows.append({
-                        "Employee": e["Employee"],
-                        "Vehicle": e["Assigned_Vehicle"],
-                        "Submitted": "✅" if not sub.empty else "❌",
-                        "Date": sub.iloc[0]["Date"].date() if not sub.empty else "N/A"
-                    })
+                for emp, vehicles in employee_vehicles.items():
+                    for vehicle in vehicles:
+                        sub = week_df[(week_df["Employee"] == emp) & (week_df["Vehicle"] == vehicle)]
+                        rows.append({
+                            "Employee": emp,
+                            "Vehicle": vehicle,
+                            "Submitted": "✅" if not sub.empty else "❌",
+                            "Date": sub.iloc[0]["Date"].date() if not sub.empty else "N/A"
+                        })
                 st.dataframe(pd.DataFrame(rows))
 
         # --- Manage Data Tab ---
@@ -333,10 +346,15 @@ else:
                 }])], ignore_index=True)
                 save_data(edf, EMPLOYEES_FILE)
                 st.rerun()
-            for idx, row in edf.iterrows():
+            
+            # Display employees grouped by name
+            employee_vehicles = edf.groupby("Employee")["Assigned_Vehicle"].apply(list).to_dict()
+            for idx, (emp, vehicles) in enumerate(employee_vehicles.items()):
                 col1, col2 = st.columns([3,1])
-                col1.write(f"{row['Employee']} ({row['Assigned_Vehicle']})")
+                vehicle_list = ", ".join(vehicles)
+                col1.write(f"{emp} ({vehicle_list})")
                 if col2.button("Delete", key=f"del_e_{idx}"):
-                    edf = edf.drop(idx)
+                    # Delete all rows for this employee
+                    edf = edf[edf["Employee"] != emp]
                     save_data(edf, EMPLOYEES_FILE)
                     st.rerun()
