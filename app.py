@@ -49,7 +49,8 @@ if not os.path.exists(EMPLOYEES_FILE):
         "Employee": ["Cody", "Mason", "Damon", "Colby", "Jake", "Jack", "Kasey", "Hayden", "Casey"],
         "Username": ["Cody", "Mason", "Damon", "Colby", "Jake", "Jack", "Kasey", "Hayden", "Casey"],
         "Password": ["password", "password", "password", "password", "password", "password", "password", "password", "password"],
-        "Assigned_Vehicle": ["Big Red", "Ugly duckling", "Jeep", "2018", "Black Shoes", "Ranger Danger", "2015", "Pest truck", "Loud Truck"]
+        "Assigned_Vehicle": ["Big Red", "Ugly duckling", "Jeep", "2018", "Black Shoes", "Ranger Danger", "2015", "Pest truck", "Loud Truck"],
+        "Credit_Card": ["None", "Card #2", "Card #3", "None", "None", "None", "None", "None", "None"]
     }).to_csv(EMPLOYEES_FILE, index=False)
 
 # --- Helper functions ---
@@ -92,7 +93,8 @@ def do_login():
                         "Employee": ["Cody", "Mason", "Damon", "Colby", "Jake", "Jack", "Kasey", "Hayden", "Casey"],
                         "Username": ["Cody", "Mason", "Damon", "Colby", "Jake", "Jack", "Kasey", "Hayden", "Casey"],
                         "Password": ["password", "password", "password", "password", "password", "password", "password", "password", "password"],
-                        "Assigned_Vehicle": ["Big Red", "Ugly duckling", "Jeep", "2018", "Black Shoes", "Ranger Danger", "2015", "Pest truck", "Loud Truck"]
+                        "Assigned_Vehicle": ["Big Red", "Ugly duckling", "Jeep", "2018", "Black Shoes", "Ranger Danger", "2015", "Pest truck", "Loud Truck"],
+                        "Credit_Card": ["None", "Card #2", "Card #3", "None", "None", "None", "None", "None", "None"]
                     }
                     emp_df = pd.DataFrame(emp_data)
                     save_data(emp_df, EMPLOYEES_FILE)
