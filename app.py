@@ -91,7 +91,7 @@ def do_login():
                 emp_df["Password"] = emp_df["Password"].astype(str).str.strip()
                 usr = username.strip()
                 pwd = password.strip()
-                match = emp_df[(emp_df.Username==usr)&(emp_df.Password==pwd)] if usr and pwd else pd.DataFrame()
+                match = emp_df[(emp_df["Username"]==usr)&(emp_df["Password"]==pwd)] if usr and pwd else pd.DataFrame()
                 if not match.empty:
                     st.session_state.update({
                         "logged_in": True,
@@ -124,7 +124,7 @@ else:
     # --- Employee View ---
     if st.session_state.user_type == "employee":
         emp_df = load_data(EMPLOYEES_FILE)
-        user_vehicles = emp_df[emp_df.Employee == st.session_state.employee_id]["Assigned_Vehicle"].tolist()
+        user_vehicles = emp_df[emp_df["Employee"] == st.session_state.employee_id]["Assigned_Vehicle"].tolist()
         
         st.subheader(f"Welcome, {st.session_state.employee_id}!")
         
