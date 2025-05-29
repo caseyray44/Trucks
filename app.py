@@ -87,22 +87,28 @@ def do_login():
                 st.rerun()
             elif user_type == "Employee":
                 try:
-                    emp_df = load_data(EMPLOYEES_FILE)
-                    # Debug: Show what's in the file
-                    st.write("Debug - Employee data:")
-                    st.dataframe(emp_df)
+                    # Force recreate the employees file to ensure clean data
+                    emp_data = {
+                        "Employee": ["Cody", "Mason", "Damon", "Colby", "Jake", "Jack", "Kasey", "Hayden", "Casey"],
+                        "Username": ["Cody", "Mason", "Damon", "Colby", "Jake", "Jack", "Kasey", "Hayden", "Casey"],
+                        "Password": ["password", "password", "password", "password", "password", "password", "password", "password", "password"],
+                        "Assigned_Vehicle": ["Big Red", "Ugly duckling", "Jeep", "2018", "Black Shoes", "Ranger Danger", "2015", "Pest truck", "Loud Truck"]
+                    }
+                    emp_df = pd.DataFrame(emp_data)
+                    save_data(emp_df, EMPLOYEES_FILE)
                     
-                    # Convert to string and strip whitespace
-                    emp_df["Username"] = emp_df["Username"].astype(str).str.strip().str.lower()
+                    # Now load and process
+                    emp_df = load_data(EMPLOYEES_FILE)
+                    
+                    # Clean the data
+                    emp_df["Username"] = emp_df["Username"].astype(str).str.strip()
                     emp_df["Password"] = emp_df["Password"].astype(str).str.strip()
                     
-                    usr = username.strip().lower()
+                    usr = username.strip()
                     pwd = password.strip()
                     
-                    st.write(f"Debug - Looking for username: '{usr}' and password: '{pwd}'")
-                    
-                    # Find matching user
-                    match = emp_df[(emp_df["Username"] == usr) & (emp_df["Password"] == pwd)]
+                    # Case-insensitive username matching
+                    match = emp_df[(emp_df["Username"].str.lower() == usr.lower()) & (emp_df["Password"] == pwd)]
                     
                     if not match.empty:
                         st.session_state.update({
@@ -113,10 +119,9 @@ def do_login():
                         })
                         st.rerun()
                     else:
-                        st.error(f"Login failed. No match found for username '{usr}' with password '{pwd}'")
-                        st.write("Available usernames:", list(emp_df["Username"].unique()))
+                        st.error("Invalid username or password")
                 except Exception as e:
-                    st.error(f"Error during login: {str(e)}")
+                    st.error(f"Login error: {str(e)}")
             else:
                 st.error("Please select a valid user type and enter credentials.")
 
