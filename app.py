@@ -46,10 +46,10 @@ if not os.path.exists(VEHICLES_FILE):
 
 if not os.path.exists(EMPLOYEES_FILE):
     pd.DataFrame({
-        "Employee": ["Cody", "Mason", "Damon", "Colby", "Jake", "Jack", "Kasey", "Kasey", "Hayden", "Casey"],
-        "Username": ["Cody", "Mason", "Damon", "Colby", "Jake", "Jack", "Kasey", "Kasey", "Hayden", "Casey"],
-        "Password": ["password", "password", "password", "password", "password", "password", "password", "password", "password", "password"],
-        "Assigned_Vehicle": ["Big Red", "Ugly duckling", "Jeep", "2018", "Black Shoes", "Ranger Danger", "2015", "Pest truck", "Loud Truck", "Karma"]
+        "Employee": ["Cody", "Mason", "Damon", "Colby", "Jake", "Jack", "Kasey", "Hayden", "Casey"],
+        "Username": ["Cody", "Mason", "Damon", "Colby", "Jake", "Jack", "Kasey", "Hayden", "Casey"],
+        "Password": ["password", "password", "password", "password", "password", "password", "password", "password", "password"],
+        "Assigned_Vehicle": ["Big Red", "Ugly duckling", "Jeep", "2018", "Black Shoes", "Ranger Danger", "2015", "Pest truck", "Loud Truck"]
     }).to_csv(EMPLOYEES_FILE, index=False)
 
 # --- Helper functions ---
@@ -86,24 +86,39 @@ def do_login():
                 })
                 st.rerun()
             elif user_type == "Employee":
-                emp_df = load_data(EMPLOYEES_FILE)
-                emp_df["Username"] = emp_df["Username"].astype(str).str.strip()
-                emp_df["Password"] = emp_df["Password"].astype(str).str.strip()
-                usr = username.strip()
-                pwd = password.strip()
-                match = emp_df[(emp_df["Username"]==usr)&(emp_df["Password"]==pwd)] if usr and pwd else pd.DataFrame()
-                if not match.empty:
-                    st.session_state.update({
-                        "logged_in": True,
-                        "user_type": "employee",
-                        "employee_id": match.iloc[0]["Employee"],
-                        "username": usr
-                    })
-                    st.rerun()
-                else:
-                    st.error("Wrong username or password")
+                try:
+                    emp_df = load_data(EMPLOYEES_FILE)
+                    # Debug: Show what's in the file
+                    st.write("Debug - Employee data:")
+                    st.dataframe(emp_df)
+                    
+                    # Convert to string and strip whitespace
+                    emp_df["Username"] = emp_df["Username"].astype(str).str.strip().str.lower()
+                    emp_df["Password"] = emp_df["Password"].astype(str).str.strip()
+                    
+                    usr = username.strip().lower()
+                    pwd = password.strip()
+                    
+                    st.write(f"Debug - Looking for username: '{usr}' and password: '{pwd}'")
+                    
+                    # Find matching user
+                    match = emp_df[(emp_df["Username"] == usr) & (emp_df["Password"] == pwd)]
+                    
+                    if not match.empty:
+                        st.session_state.update({
+                            "logged_in": True,
+                            "user_type": "employee",
+                            "employee_id": match.iloc[0]["Employee"],
+                            "username": usr
+                        })
+                        st.rerun()
+                    else:
+                        st.error(f"Login failed. No match found for username '{usr}' with password '{pwd}'")
+                        st.write("Available usernames:", list(emp_df["Username"].unique()))
+                except Exception as e:
+                    st.error(f"Error during login: {str(e)}")
             else:
-                st.error("Please select a valid user type and credentials.")
+                st.error("Please select a valid user type and enter credentials.")
 
 def do_logout():
     if st.button("Logout"):
@@ -131,8 +146,11 @@ else:
         # If employee has multiple vehicles, let them choose
         if len(user_vehicles) > 1:
             vehicle = st.selectbox("Select Vehicle to Check", user_vehicles)
-        else:
+        elif len(user_vehicles) == 1:
             vehicle = user_vehicles[0]
+        else:
+            st.error("No vehicle assigned to this employee.")
+            st.stop()
             
         st.write(f"Vehicle: **{vehicle}**")
         st.markdown("---")
@@ -267,21 +285,27 @@ else:
             sel = st.selectbox("Select Vehicle", vdf["Vehicle"])
 
             ml = load_data(MILEAGE_FILE)
-            ml["Date"] = pd.to_datetime(ml["Date"])
-            hist = ml[ml["Vehicle"] == sel]
-            if not hist.empty:
-                st.line_chart(hist.set_index("Date")["Mileage"])
-                st.dataframe(hist[["Date","Employee","Mileage","Mileage_Comments"]])
+            if not ml.empty:
+                ml["Date"] = pd.to_datetime(ml["Date"])
+                hist = ml[ml["Vehicle"] == sel]
+                if not hist.empty:
+                    st.line_chart(hist.set_index("Date")["Mileage"])
+                    st.dataframe(hist[["Date","Employee","Mileage","Mileage_Comments"]])
+                else:
+                    st.write("No mileage logged for this vehicle.")
             else:
-                st.write("No mileage logged.")
+                st.write("No mileage data available.")
 
             sd = load_data(DATA_FILE)
-            sd["Date"] = pd.to_datetime(sd["Date"])
-            rec = sd[sd["Vehicle"] == sel].sort_values("Date", ascending=False)
-            st.write("### Recent Notes")
-            for _, r in rec.iterrows():
-                if pd.notna(r["Notes"]) and r["Notes"]:
-                    st.write(f"{r['Date'].date()} - {r['Employee']} - {r['Notes']}")
+            if not sd.empty:
+                sd["Date"] = pd.to_datetime(sd["Date"])
+                rec = sd[sd["Vehicle"] == sel].sort_values("Date", ascending=False)
+                st.write("### Recent Notes")
+                for _, r in rec.iterrows():
+                    if pd.notna(r["Notes"]) and r["Notes"]:
+                        st.write(f"{r['Date'].date()} - {r['Employee']} - {r['Notes']}")
+            else:
+                st.write("No submission data available.")
 
         # --- Employees Tab ---
         with tabs[1]:
@@ -296,19 +320,17 @@ else:
                 week_df = sd[sd["Week"] == week]
 
                 emp_df = load_data(EMPLOYEES_FILE)
-                # Group by employee and vehicle to handle multiple vehicles per employee
-                employee_vehicles = emp_df.groupby("Employee")["Assigned_Vehicle"].apply(list).to_dict()
-                
                 rows = []
-                for emp, vehicles in employee_vehicles.items():
-                    for vehicle in vehicles:
-                        sub = week_df[(week_df["Employee"] == emp) & (week_df["Vehicle"] == vehicle)]
-                        rows.append({
-                            "Employee": emp,
-                            "Vehicle": vehicle,
-                            "Submitted": "✅" if not sub.empty else "❌",
-                            "Date": sub.iloc[0]["Date"].date() if not sub.empty else "N/A"
-                        })
+                for _, emp_row in emp_df.iterrows():
+                    emp = emp_row["Employee"]
+                    vehicle = emp_row["Assigned_Vehicle"]
+                    sub = week_df[(week_df["Employee"] == emp) & (week_df["Vehicle"] == vehicle)]
+                    rows.append({
+                        "Employee": emp,
+                        "Vehicle": vehicle,
+                        "Submitted": "✅" if not sub.empty else "❌",
+                        "Date": sub.iloc[0]["Date"].date() if not sub.empty else "N/A"
+                    })
                 st.dataframe(pd.DataFrame(rows))
 
         # --- Manage Data Tab ---
@@ -347,14 +369,12 @@ else:
                 save_data(edf, EMPLOYEES_FILE)
                 st.rerun()
             
-            # Display employees grouped by name
-            employee_vehicles = edf.groupby("Employee")["Assigned_Vehicle"].apply(list).to_dict()
-            for idx, (emp, vehicles) in enumerate(employee_vehicles.items()):
+            st.dataframe(edf)
+            
+            for idx, row in edf.iterrows():
                 col1, col2 = st.columns([3,1])
-                vehicle_list = ", ".join(vehicles)
-                col1.write(f"{emp} ({vehicle_list})")
+                col1.write(f"{row['Employee']} - {row['Username']} ({row['Assigned_Vehicle']})")
                 if col2.button("Delete", key=f"del_e_{idx}"):
-                    # Delete all rows for this employee
-                    edf = edf[edf["Employee"] != emp]
+                    edf = edf.drop(idx)
                     save_data(edf, EMPLOYEES_FILE)
                     st.rerun()
