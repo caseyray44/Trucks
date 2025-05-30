@@ -41,16 +41,16 @@ if not os.path.exists(MILEAGE_FILE):
 
 if not os.path.exists(VEHICLES_FILE):
     pd.DataFrame({
-        "Vehicle": ["Loud Truck", "Big Red", "Jeep", "Karma", "Ugly Duckling", "Wash Truck", "2018", "Ranger Danger", "2015"]
+        "Vehicle": ["Loud Truck", "Big Red", "Jeep", "Karma", "Ugly Duckling", "Wash Truck", "2018", "Ranger Danger", "2015", "Black Shoes"]
     }).to_csv(VEHICLES_FILE, index=False)
 
 if not os.path.exists(EMPLOYEES_FILE):
     pd.DataFrame({
-        "Employee": ["Hayden", "Cody", "Damon", "Casey", "Mason", "Grayson", "Colby", "Jack", "Kasey"],
-        "Username": ["Hayden", "Cody", "Damon", "Casey", "Mason", "Grayson", "Colby", "Jack", "Kasey"],
-        "Password": ["password", "password", "password", "password", "password", "password", "password", "password", "password"],
-        "Assigned_Vehicle": ["Loud Truck", "Big Red", "Jeep", "Karma", "Ugly Duckling", "Wash Truck", "2018", "Ranger Danger", "2015"],
-        "Credit_Card": ["None", "None", "None", "None", "Card #2", "None", "None", "None", "None"]
+        "Employee": ["Hayden", "Cody", "Damon", "Casey", "Mason", "Grayson", "Colby", "Jack", "Kasey", "Jake"],
+        "Username": ["Hayden", "Cody", "Damon", "Casey", "Mason", "Grayson", "Colby", "Jack", "Kasey", "Jake"],
+        "Password": ["password", "password", "password", "password", "password", "password", "password", "password", "password", "password"],
+        "Assigned_Vehicle": ["Loud Truck", "Big Red", "Jeep", "Karma", "Ugly Duckling", "Wash Truck", "2018", "Ranger Danger", "2015", "Black Shoes"],
+        "Credit_Card": ["None", "None", "None", "None", "Card #2", "None", "None", "None", "None", "None"]
     }).to_csv(EMPLOYEES_FILE, index=False)
 
 # --- Helper functions ---
@@ -90,11 +90,11 @@ def do_login():
                 try:
                     # Force recreate the employees file to ensure clean data
                     emp_data = {
-                        "Employee": ["Hayden", "Cody", "Damon", "Casey", "Mason", "Grayson", "Colby", "Jack", "Kasey"],
-                        "Username": ["Hayden", "Cody", "Damon", "Casey", "Mason", "Grayson", "Colby", "Jack", "Kasey"],
-                        "Password": ["password", "password", "password", "password", "password", "password", "password", "password", "password"],
-                        "Assigned_Vehicle": ["Loud Truck", "Big Red", "Jeep", "Karma", "Ugly Duckling", "Wash Truck", "2018", "Ranger Danger", "2015"],
-                        "Credit_Card": ["None", "None", "None", "None", "Card #2", "None", "None", "None", "None"]
+                        "Employee": ["Hayden", "Cody", "Damon", "Casey", "Mason", "Grayson", "Colby", "Jack", "Kasey", "Jake"],
+                        "Username": ["Hayden", "Cody", "Damon", "Casey", "Mason", "Grayson", "Colby", "Jack", "Kasey", "Jake"],
+                        "Password": ["password", "password", "password", "password", "password", "password", "password", "password", "password", "password"],
+                        "Assigned_Vehicle": ["Loud Truck", "Big Red", "Jeep", "Karma", "Ugly Duckling", "Wash Truck", "2018", "Ranger Danger", "2015", "Black Shoes"],
+                        "Credit_Card": ["None", "None", "None", "None", "Card #2", "None", "None", "None", "None", "None"]
                     }
                     emp_df = pd.DataFrame(emp_data)
                     save_data(emp_df, EMPLOYEES_FILE)
