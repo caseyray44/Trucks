@@ -109,6 +109,11 @@ def do_login():
                     usr = username.strip()
                     pwd = password.strip()
                     
+                    # Debug: Show what we're comparing
+                    st.write(f"DEBUG: Looking for username '{usr}' with password '{pwd}'")
+                    st.write("Available employees:")
+                    st.dataframe(emp_df[["Username", "Password"]])
+                    
                     # Case-insensitive username matching
                     match = emp_df[(emp_df["Username"].str.lower() == usr.lower()) & (emp_df["Password"] == pwd)]
                     
